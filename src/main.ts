@@ -31,6 +31,7 @@ interface Point {
 }
 
 const lines: Point[][] = [];
+const redoLines: Point[][] = [];
 let currentLine: Point[] = [];
 const drawChanged = new Event("drawing-changed");
 
@@ -44,6 +45,7 @@ canvas.addEventListener("mousedown", (e) => {
   cursor.y = e.offsetY;
   currentLine = [];
   lines.push(currentLine);
+  redoLines.splice(firstIndex, redoLines.length);
   canvas.dispatchEvent(drawChanged);
 });
 
@@ -79,16 +81,38 @@ function redraw() {
   }
 }
 
-const lineBreak = document.createElement("br");
-app.append(lineBreak);
+const buttonContainer = document.createElement("div");
+buttonContainer.style.display = "flex";
+buttonContainer.style.justifyContent = "center";
+app.append(buttonContainer);
 
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "clear";
-app.append(clearButton);
-
+buttonContainer.append(clearButton);
 clearButton.addEventListener("click", () => {
   if (lines.length > empty) {
     lines.splice(firstIndex, lines.length);
+    redoLines.splice(firstIndex, redoLines.length);
+    canvas.dispatchEvent(drawChanged);
+  }
+});
+
+const undoButton = document.createElement("button");
+undoButton.innerHTML = "Undo";
+buttonContainer.append(undoButton);
+undoButton.addEventListener("click", () => {
+  if (lines.length > empty) {
+    redoLines.push(lines.pop()!);
+    canvas.dispatchEvent(drawChanged);
+  }
+});
+
+const redoButton = document.createElement("button");
+redoButton.innerHTML = "Redo";
+buttonContainer.append(redoButton);
+redoButton.addEventListener("click", () => {
+  if (redoLines.length > empty) {
+    lines.push(redoLines.pop()!);
     canvas.dispatchEvent(drawChanged);
   }
 });
