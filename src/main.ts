@@ -1,7 +1,9 @@
 import "./style.css";
 const CURSOR_OFFSET_X = -8;
 const CURSOR_OFFSET_Y = 16;
-const LINE_WIDTH = 4;
+const LINE_WIDTH_THIN = 2;
+const LINE_WIDTH_THICK = 4;
+let LINE_WIDTH = 4;
 const FIRST_INDEX = 0;
 const HEIGHT = 256;
 const WIDTH = 256;
@@ -16,15 +18,17 @@ interface Point {
 
 class LineCommand {
   private points: Point[];
+  private lineWidth: number;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, lineWidth: number) {
     this.points = [{ x, y }];
+    this.lineWidth = lineWidth;
   }
 
   public display(ctx: CanvasRenderingContext2D | null): void {
     if (ctx) {
       ctx.strokeStyle = "black";
-      ctx.lineWidth = LINE_WIDTH;
+      ctx.lineWidth = this.lineWidth;
       ctx.beginPath();
       const { x, y } = this.points[FIRST_INDEX];
       ctx.moveTo(x, y);
@@ -54,6 +58,20 @@ class CursorCommand {
       ctx.font = "32px monospace";
       ctx.fillText("*", this.x + CURSOR_OFFSET_X, this.y + CURSOR_OFFSET_Y);
     }
+  }
+}
+
+class ToolButton {
+  public readonly lineWidth: number;
+  public isClick: boolean;
+  public button: HTMLButtonElement;
+
+  constructor(name: string, lineWidth: number) {
+    this.lineWidth = lineWidth;
+    this.button = document.createElement("button");
+    this.button.innerHTML = name;
+    this.isClick = false;
+    this.button.style.fontWeight = ``;
   }
 }
 
@@ -117,7 +135,7 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  currentLineCommand = new LineCommand(e.offsetX, e.offsetY);
+  currentLineCommand = new LineCommand(e.offsetX, e.offsetY, LINE_WIDTH);
   commands.push(currentLineCommand);
   redoCommands.splice(FIRST_INDEX, redoCommands.length);
   notify("drawing-changed");
@@ -175,43 +193,40 @@ buttonContainer2.style.display = "flex";
 buttonContainer2.style.justifyContent = "center";
 app.append(buttonContainer2);
 
-const thinButton = document.createElement("button");
-thinButton.innerHTML = "Thin";
-let isThin = false;
+const thinTool = new ToolButton(`🖋️Thin Tool`, LINE_WIDTH_THIN);
+const thinButton = thinTool.button;
 buttonContainer2.append(thinButton);
-thinButton.addEventListener(`click`, () => {
-  if (!isThin && isThick) {
-    thinButton.style.fontWeight = `bold`;
-    thickButton.style.fontWeight = ``;
-  } else if (isThin && !isThick) {
-    thinButton.style.fontWeight = ``;
-    thickButton.style.fontWeight = `bold`;
-  }
-  isThin = !isThin;
-  isThick = !isThick;
-});
 
-const thickButton = document.createElement("button");
-thickButton.innerHTML = "Thick";
-let isThick = true;
+const thickTool = new ToolButton(`🖍️Thick Tool`, LINE_WIDTH_THICK);
+const thickButton = thickTool.button;
 thickButton.style.fontWeight = `bold`;
+thickTool.isClick = true;
 buttonContainer2.append(thickButton);
-thickButton.addEventListener(`click`, () => {
-  if (!isThick && isThin) {
-    thinButton.style.fontWeight = ``;
-    thickButton.style.fontWeight = `bold`;
-  } else if (isThick && !isThin) {
+
+thinButton.addEventListener(`click`, () => {
+  if (!thinTool.isClick && thickTool.isClick) {
     thinButton.style.fontWeight = `bold`;
     thickButton.style.fontWeight = ``;
+    LINE_WIDTH = LINE_WIDTH_THIN;
+  } else if (thinTool.isClick && !thickTool.isClick) {
+    thinButton.style.fontWeight = ``;
+    thickButton.style.fontWeight = `bold`;
+    LINE_WIDTH = LINE_WIDTH_THICK;
   }
-  isThin = !isThin;
-  isThick = !isThick;
+  thinTool.isClick = !thinTool.isClick;
+  thickTool.isClick = !thickTool.isClick;
 });
 
-thinButton.addEventListener(`mousedown`, () => {
-  thinButton.style.transform = `scale(0.8)`;
-});
-
-thinButton.addEventListener(`mouseup`, () => {
-  thinButton.style.transform = ``;
+thickButton.addEventListener(`click`, () => {
+  if (!thickTool.isClick && thinTool.isClick) {
+    thinButton.style.fontWeight = ``;
+    thickButton.style.fontWeight = `bold`;
+    LINE_WIDTH = LINE_WIDTH_THICK;
+  } else if (thickTool.isClick && !thinTool.isClick) {
+    thinButton.style.fontWeight = `bold`;
+    thickButton.style.fontWeight = ``;
+    LINE_WIDTH = LINE_WIDTH_THIN;
+  }
+  thinTool.isClick = !thinTool.isClick;
+  thickTool.isClick = !thickTool.isClick;
 });
