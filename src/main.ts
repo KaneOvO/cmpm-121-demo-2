@@ -146,6 +146,7 @@ clearButton.innerHTML = "clear";
 buttonContainer.append(clearButton);
 clearButton.addEventListener("click", () => {
   commands.splice(FIRST_INDEX, commands.length);
+  redoCommands.splice(FIRST_INDEX, redoCommands.length);
   notify("drawing-changed");
 });
 
@@ -167,4 +168,50 @@ redoButton.addEventListener("click", () => {
     commands.push(redoCommands.pop()!);
     notify("drawing-changed");
   }
+});
+
+const buttonContainer2 = document.createElement("div");
+buttonContainer2.style.display = "flex";
+buttonContainer2.style.justifyContent = "center";
+app.append(buttonContainer2);
+
+const thinButton = document.createElement("button");
+thinButton.innerHTML = "Thin";
+let isThin = false;
+buttonContainer2.append(thinButton);
+thinButton.addEventListener(`click`, () => {
+  if (!isThin && isThick) {
+    thinButton.style.fontWeight = `bold`;
+    thickButton.style.fontWeight = ``;
+  } else if (isThin && !isThick) {
+    thinButton.style.fontWeight = ``;
+    thickButton.style.fontWeight = `bold`;
+  }
+  isThin = !isThin;
+  isThick = !isThick;
+});
+
+const thickButton = document.createElement("button");
+thickButton.innerHTML = "Thick";
+let isThick = true;
+thickButton.style.fontWeight = `bold`;
+buttonContainer2.append(thickButton);
+thickButton.addEventListener(`click`, () => {
+  if (!isThick && isThin) {
+    thinButton.style.fontWeight = ``;
+    thickButton.style.fontWeight = `bold`;
+  } else if (isThick && !isThin) {
+    thinButton.style.fontWeight = `bold`;
+    thickButton.style.fontWeight = ``;
+  }
+  isThin = !isThin;
+  isThick = !isThick;
+});
+
+thinButton.addEventListener(`mousedown`, () => {
+  thinButton.style.transform = `scale(0.8)`;
+});
+
+thinButton.addEventListener(`mouseup`, () => {
+  thinButton.style.transform = ``;
 });
