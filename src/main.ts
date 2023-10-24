@@ -1,7 +1,7 @@
 import "./style.css";
 const LINE_WIDTH_THIN = 2;
 const LINE_WIDTH_THICK = 4;
-let LINE_WIDTH = LINE_WIDTH_THICK;
+let LINE_WIDTH = LINE_WIDTH_THIN;
 const FIRST_INDEX = 0;
 const HEIGHT = 256;
 const WIDTH = 256;
@@ -25,7 +25,7 @@ class LineCommand {
   }
 
   public display(ctx: CanvasRenderingContext2D | null): void {
-    if (ctx) {
+    if (ctx && this.lineWidth > EMPTY) {
       ctx.strokeStyle = "black";
       ctx.lineWidth = this.lineWidth;
       ctx.beginPath();
@@ -76,6 +76,14 @@ class ToolButton {
     this.isClick = false;
     this.button.style.fontWeight = ``;
   }
+}
+
+function creatButtonContainer() {
+  const buttonContainer = document.createElement("div");
+  buttonContainer.style.display = "flex";
+  buttonContainer.style.justifyContent = "center";
+  app.append(buttonContainer);
+  return buttonContainer;
 }
 
 const app: HTMLDivElement = document.querySelector("#app")!;
@@ -158,10 +166,7 @@ function redraw() {
   }
 }
 
-const buttonContainer = document.createElement("div");
-buttonContainer.style.display = "flex";
-buttonContainer.style.justifyContent = "center";
-app.append(buttonContainer);
+const buttonContainer = creatButtonContainer();
 
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "clear";
@@ -192,23 +197,20 @@ redoButton.addEventListener("click", () => {
   }
 });
 
-const buttonContainer2 = document.createElement("div");
-buttonContainer2.style.display = "flex";
-buttonContainer2.style.justifyContent = "center";
-app.append(buttonContainer2);
+const buttonContainer2 = creatButtonContainer();
 
 const thinTool = new ToolButton(`🖋️Thin Tool`, LINE_WIDTH_THIN);
 const thinButton = thinTool.button;
+thinTool.isClick = true;
+thinButton.style.fontWeight = `bold`;
 buttonContainer2.append(thinButton);
 
 const thickTool = new ToolButton(`🖍️Thick Tool`, LINE_WIDTH_THICK);
 const thickButton = thickTool.button;
-thickButton.style.fontWeight = `bold`;
-thickTool.isClick = true;
 buttonContainer2.append(thickButton);
 
 thinButton.addEventListener(`click`, () => {
-  if (!thinTool.isClick && thickTool.isClick) {
+  if (!thinTool.isClick) {
     thinButton.style.fontWeight = `bold`;
     thickButton.style.fontWeight = ``;
     LINE_WIDTH = LINE_WIDTH_THIN;
@@ -222,7 +224,7 @@ thinButton.addEventListener(`click`, () => {
 });
 
 thickButton.addEventListener(`click`, () => {
-  if (!thickTool.isClick && thinTool.isClick) {
+  if (!thickTool.isClick) {
     thinButton.style.fontWeight = ``;
     thickButton.style.fontWeight = `bold`;
     LINE_WIDTH = LINE_WIDTH_THICK;
@@ -234,3 +236,19 @@ thickButton.addEventListener(`click`, () => {
   thinTool.isClick = !thinTool.isClick;
   thickTool.isClick = !thickTool.isClick;
 });
+
+const buttonContainer3 = creatButtonContainer();
+
+//Add a few buttons to your app associated with at least different 3 stickers (emoji strings).
+//Make sure to fire the "tool-moved" event when any of them are clicked.Applying the command pattern again, implement a command that will give the user a preview of where their sticker will be placed.Implementing yet another command, implement a command for including a sticker in the drawing.The drag method for this object should reposition the sticker(rather than keeping a history of the dragged path).
+const emojiButton = document.createElement("button");
+emojiButton.innerHTML = "😀";
+buttonContainer3.append(emojiButton);
+
+const emojiButton2 = document.createElement("button");
+emojiButton2.innerHTML = "😎";
+buttonContainer3.append(emojiButton2);
+
+const emojiButton3 = document.createElement("button");
+emojiButton3.innerHTML = "😍";
+buttonContainer3.append(emojiButton3);
