@@ -5,10 +5,12 @@ let LINE_WIDTH = LINE_WIDTH_THIN;
 const FIRST_INDEX = 0;
 const HEIGHT = 256;
 const WIDTH = 256;
+const EXPORT_CANVAS_SIZE = 1024;
 const ORIGIN = 0;
 const EMPTY = 0;
 const LEFT_BUTTON = 1;
 const HALF = 2;
+const EXPORT_TEXT_SACLE = 4;
 let IS_STICKER = false;
 let STICKER = ``;
 const ALL_TOOL_BUTTONS: ToolButton[] = [];
@@ -249,9 +251,15 @@ redoButton.addEventListener("click", () => {
   }
 });
 
+const buttonContainer2 = creatButtonContainer();
+
 const customStickerButton = document.createElement(`button`);
 customStickerButton.innerHTML = `Create Your Sticker`;
-buttonContainer.append(customStickerButton);
+buttonContainer2.append(customStickerButton);
+
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+buttonContainer2.append(exportButton);
 
 customStickerButton.addEventListener(`click`, () => {
   const customStickersInput = prompt(
@@ -267,30 +275,45 @@ customStickerButton.addEventListener(`click`, () => {
   }
 });
 
-const buttonContainer2 = creatButtonContainer();
+const buttonContainer3 = creatButtonContainer();
 
 const thinTool = new ToolButton(`🖋️Thin Tool`, LINE_WIDTH_THIN);
 const thinButton = thinTool.button;
 thinTool.isClick = true;
 thinButton.style.border = `2px solid blue`;
-buttonContainer2.append(thinButton);
+buttonContainer3.append(thinButton);
 ALL_TOOL_BUTTONS.push(thinTool);
 thinTool.setting();
 
 const thickTool = new ToolButton(`🖍️Thick Tool`, LINE_WIDTH_THICK);
 const thickButton = thickTool.button;
-buttonContainer2.append(thickButton);
+buttonContainer3.append(thickButton);
 ALL_TOOL_BUTTONS.push(thickTool);
 thickTool.setting();
 
-const buttonContainer3 = creatButtonContainer();
+const buttonContainer4 = creatButtonContainer();
 
 function createStickerButtons(stickers: string[]): void {
   stickers.forEach((sticker) => {
     const stickerTool = new ToolButton(sticker, EMPTY, true);
     ALL_TOOL_BUTTONS.push(stickerTool);
-    buttonContainer3.append(stickerTool.button);
+    buttonContainer4.append(stickerTool.button);
   });
 }
 
 createStickerButtons(DEFAULT_STICKERS);
+
+exportButton.addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = EXPORT_CANVAS_SIZE;
+  exportCanvas.height = EXPORT_CANVAS_SIZE;
+  const exportCtx = exportCanvas.getContext("2d");
+  exportCtx!.scale(EXPORT_TEXT_SACLE, EXPORT_TEXT_SACLE);
+
+  commands.forEach((cmd) => cmd.display(exportCtx));
+
+  const image = document.createElement("a");
+  image.download = "exported_image.png";
+  image.href = exportCanvas.toDataURL("image/png");
+  image.click();
+});
