@@ -11,6 +11,8 @@ const LEFT_BUTTON = 1;
 const HALF = 2;
 let IS_STICKER = false;
 let STICKER = ``;
+const ALL_TOOL_BUTTONS: ToolButton[] = [];
+const DEFAULT_STICKERS: string[] = [`😀`, `😎`, `😍`];
 
 interface Point {
   x: number;
@@ -97,59 +99,38 @@ class ToolButton {
     this.isClick = false;
     this.button.style.fontWeight = ``;
     this.isSticker = isSticker;
+    this.setting();
   }
 
-  setting(
-    tool1: ToolButton,
-    tool2: ToolButton,
-    tool3: ToolButton,
-    tool4: ToolButton
-  ) {
+  setting() {
     this.button.addEventListener(`click`, () => {
-      if (!this.isSticker) {
-        if (!this.isClick) {
-          this.isClick = true;
-          tool1.isClick = false;
-          tool2.isClick = false;
-          tool3.isClick = false;
-          tool4.isClick = false;
-          LINE_WIDTH = this.lineWidth;
-          IS_STICKER = false;
-          STICKER = ``;
-          this.button.style.border = `2px solid blue`;
-          tool1.button.style.border = ``;
-          tool2.button.style.border = ``;
-          tool3.button.style.border = ``;
-          tool4.button.style.border = ``;
-        }
-      } else {
-        if (!this.isClick) {
-          this.isClick = true;
-          tool1.isClick = false;
-          tool2.isClick = false;
-          tool3.isClick = false;
-          tool4.isClick = false;
-          LINE_WIDTH = this.lineWidth;
-          IS_STICKER = this.isSticker;
-          STICKER = this.button.innerHTML;
-          this.button.style.border = `2px solid blue`;
-          tool1.button.style.border = ``;
-          tool2.button.style.border = ``;
-          tool3.button.style.border = ``;
-          tool4.button.style.border = ``;
-        }
+      if (!this.isClick) {
+        this.isClick = true;
+        LINE_WIDTH = this.lineWidth;
+        IS_STICKER = this.isSticker;
+        STICKER = this.isSticker ? this.button.innerHTML : ``;
+        this.button.style.border = `2px solid blue`;
+        ALL_TOOL_BUTTONS.forEach((tool) => {
+          if (tool !== this) {
+            tool.isClick = false;
+            tool.button.style.border = ``;
+          }
+        });
       }
     });
   }
 }
 
-function creatButtonContainer() {
-  const buttonContainer = document.createElement("div");
-  buttonContainer.style.display = "flex";
-  buttonContainer.style.justifyContent = "center";
-  app.append(buttonContainer);
-  return buttonContainer;
-}
+//Copilot helped streamline this code
+const creatButtonContainer = () =>
+  app.appendChild(
+    Object.assign(document.createElement("div"), {
+      style: {
+        display: "flex",
+        justifyContent: "center",
+      },
+    })
+  );
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -268,6 +249,24 @@ redoButton.addEventListener("click", () => {
   }
 });
 
+const customStickerButton = document.createElement(`button`);
+customStickerButton.innerHTML = `Create Your Sticker`;
+buttonContainer.append(customStickerButton);
+
+customStickerButton.addEventListener(`click`, () => {
+  const customStickersInput = prompt(
+    `Please enter the custom sticker content and separate multiple stickers with commas:`,
+    ``
+  );
+  if (customStickersInput) {
+    //Ask chatgpt how to remove leading and trailing spaces
+    const customStickers = customStickersInput
+      .split(`,`)
+      .map((sticker) => sticker.trim());
+    createStickerButtons(customStickers);
+  }
+});
+
 const buttonContainer2 = creatButtonContainer();
 
 const thinTool = new ToolButton(`🖋️Thin Tool`, LINE_WIDTH_THIN);
@@ -275,27 +274,23 @@ const thinButton = thinTool.button;
 thinTool.isClick = true;
 thinButton.style.border = `2px solid blue`;
 buttonContainer2.append(thinButton);
+ALL_TOOL_BUTTONS.push(thinTool);
+thinTool.setting();
 
 const thickTool = new ToolButton(`🖍️Thick Tool`, LINE_WIDTH_THICK);
 const thickButton = thickTool.button;
 buttonContainer2.append(thickButton);
+ALL_TOOL_BUTTONS.push(thickTool);
+thickTool.setting();
 
 const buttonContainer3 = creatButtonContainer();
 
-const stickerTool1 = new ToolButton(`😀`, EMPTY, true);
-const stickerButton1 = stickerTool1.button;
-buttonContainer3.append(stickerButton1);
+function createStickerButtons(stickers: string[]): void {
+  stickers.forEach((sticker) => {
+    const stickerTool = new ToolButton(sticker, EMPTY, true);
+    ALL_TOOL_BUTTONS.push(stickerTool);
+    buttonContainer3.append(stickerTool.button);
+  });
+}
 
-const stickerTool2 = new ToolButton(`😎`, EMPTY, true);
-const stickerButton2 = stickerTool2.button;
-buttonContainer3.append(stickerButton2);
-
-const stickerTool3 = new ToolButton(`😍`, EMPTY, true);
-const stickerButton3 = stickerTool3.button;
-buttonContainer3.append(stickerButton3);
-
-thinTool.setting(thickTool, stickerTool1, stickerTool2, stickerTool3);
-thickTool.setting(thinTool, stickerTool1, stickerTool2, stickerTool3);
-stickerTool1.setting(thinTool, thickTool, stickerTool2, stickerTool3);
-stickerTool2.setting(thinTool, thickTool, stickerTool1, stickerTool3);
-stickerTool3.setting(thinTool, thickTool, stickerTool1, stickerTool2);
+createStickerButtons(DEFAULT_STICKERS);
