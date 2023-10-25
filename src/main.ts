@@ -9,6 +9,8 @@ const ORIGIN = 0;
 const EMPTY = 0;
 const LEFT_BUTTON = 1;
 const HALF = 2;
+let IS_STICKER = false;
+let STICKER = ``;
 
 interface Point {
   x: number;
@@ -18,14 +20,27 @@ interface Point {
 class LineCommand {
   private points: Point[];
   private lineWidth: number;
+  private isSticker = false;
+  private sticker = ``;
 
-  constructor(x: number, y: number, lineWidth: number) {
+  constructor(
+    x: number,
+    y: number,
+    lineWidth: number,
+    isSticker: boolean,
+    sticker: string
+  ) {
     this.points = [{ x, y }];
     this.lineWidth = lineWidth;
+    this.isSticker = isSticker;
+    this.sticker = sticker;
   }
 
   public display(ctx: CanvasRenderingContext2D | null): void {
-    if (ctx && this.lineWidth > EMPTY) {
+    if (this.isSticker) {
+      const { x, y } = this.points[FIRST_INDEX];
+      ctx!.fillText(this.sticker, x, y);
+    } else if (ctx && this.lineWidth > EMPTY) {
       ctx.strokeStyle = "black";
       ctx.lineWidth = this.lineWidth;
       ctx.beginPath();
@@ -37,7 +52,6 @@ class LineCommand {
       ctx.stroke();
     }
   }
-
   public grow(x: number, y: number): void {
     this.points.push({ x, y });
   }
@@ -54,8 +68,14 @@ class CursorCommand {
     this.lineWidth = lineWidth;
   }
 
-  display(ctx: CanvasRenderingContext2D | null): void {
-    if (ctx) {
+  display(
+    ctx: CanvasRenderingContext2D | null,
+    isSticker: boolean,
+    sticker: string
+  ): void {
+    if (isSticker) {
+      ctx!.fillText(sticker, this.x, this.y);
+    } else if (ctx) {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.lineWidth / HALF, ORIGIN, Math.PI * HALF);
       ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -68,13 +88,58 @@ class ToolButton {
   public readonly lineWidth: number;
   public isClick: boolean;
   public button: HTMLButtonElement;
+  public isSticker: boolean;
 
-  constructor(name: string, lineWidth: number) {
+  constructor(name: string, lineWidth = EMPTY, isSticker = false) {
     this.lineWidth = lineWidth;
     this.button = document.createElement("button");
     this.button.innerHTML = name;
     this.isClick = false;
     this.button.style.fontWeight = ``;
+    this.isSticker = isSticker;
+  }
+
+  setting(
+    tool1: ToolButton,
+    tool2: ToolButton,
+    tool3: ToolButton,
+    tool4: ToolButton
+  ) {
+    this.button.addEventListener(`click`, () => {
+      if (!this.isSticker) {
+        if (!this.isClick) {
+          this.isClick = true;
+          tool1.isClick = false;
+          tool2.isClick = false;
+          tool3.isClick = false;
+          tool4.isClick = false;
+          LINE_WIDTH = this.lineWidth;
+          IS_STICKER = false;
+          STICKER = ``;
+          this.button.style.border = `2px solid blue`;
+          tool1.button.style.border = ``;
+          tool2.button.style.border = ``;
+          tool3.button.style.border = ``;
+          tool4.button.style.border = ``;
+        }
+      } else {
+        if (!this.isClick) {
+          this.isClick = true;
+          tool1.isClick = false;
+          tool2.isClick = false;
+          tool3.isClick = false;
+          tool4.isClick = false;
+          LINE_WIDTH = this.lineWidth;
+          IS_STICKER = this.isSticker;
+          STICKER = this.button.innerHTML;
+          this.button.style.border = `2px solid blue`;
+          tool1.button.style.border = ``;
+          tool2.button.style.border = ``;
+          tool3.button.style.border = ``;
+          tool4.button.style.border = ``;
+        }
+      }
+    });
   }
 }
 
@@ -146,7 +211,13 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  currentLineCommand = new LineCommand(e.offsetX, e.offsetY, LINE_WIDTH);
+  currentLineCommand = new LineCommand(
+    e.offsetX,
+    e.offsetY,
+    LINE_WIDTH,
+    IS_STICKER,
+    STICKER
+  );
   cursorCommand = null;
   commands.push(currentLineCommand);
   redoCommands.splice(FIRST_INDEX, redoCommands.length);
@@ -162,7 +233,7 @@ function redraw() {
   ctx!.clearRect(ORIGIN, ORIGIN, canvas.width, canvas.height);
   commands.forEach((cmd) => cmd.display(ctx));
   if (cursorCommand) {
-    cursorCommand.display(ctx);
+    cursorCommand.display(ctx, IS_STICKER, STICKER);
   }
 }
 
@@ -202,53 +273,29 @@ const buttonContainer2 = creatButtonContainer();
 const thinTool = new ToolButton(`🖋️Thin Tool`, LINE_WIDTH_THIN);
 const thinButton = thinTool.button;
 thinTool.isClick = true;
-thinButton.style.fontWeight = `bold`;
+thinButton.style.border = `2px solid blue`;
 buttonContainer2.append(thinButton);
 
 const thickTool = new ToolButton(`🖍️Thick Tool`, LINE_WIDTH_THICK);
 const thickButton = thickTool.button;
 buttonContainer2.append(thickButton);
 
-thinButton.addEventListener(`click`, () => {
-  if (!thinTool.isClick) {
-    thinButton.style.fontWeight = `bold`;
-    thickButton.style.fontWeight = ``;
-    LINE_WIDTH = LINE_WIDTH_THIN;
-  } else if (thinTool.isClick && !thickTool.isClick) {
-    thinButton.style.fontWeight = ``;
-    thickButton.style.fontWeight = `bold`;
-    LINE_WIDTH = LINE_WIDTH_THICK;
-  }
-  thinTool.isClick = !thinTool.isClick;
-  thickTool.isClick = !thickTool.isClick;
-});
-
-thickButton.addEventListener(`click`, () => {
-  if (!thickTool.isClick) {
-    thinButton.style.fontWeight = ``;
-    thickButton.style.fontWeight = `bold`;
-    LINE_WIDTH = LINE_WIDTH_THICK;
-  } else if (thickTool.isClick && !thinTool.isClick) {
-    thinButton.style.fontWeight = `bold`;
-    thickButton.style.fontWeight = ``;
-    LINE_WIDTH = LINE_WIDTH_THIN;
-  }
-  thinTool.isClick = !thinTool.isClick;
-  thickTool.isClick = !thickTool.isClick;
-});
-
 const buttonContainer3 = creatButtonContainer();
 
-//Add a few buttons to your app associated with at least different 3 stickers (emoji strings).
-//Make sure to fire the "tool-moved" event when any of them are clicked.Applying the command pattern again, implement a command that will give the user a preview of where their sticker will be placed.Implementing yet another command, implement a command for including a sticker in the drawing.The drag method for this object should reposition the sticker(rather than keeping a history of the dragged path).
-const emojiButton = document.createElement("button");
-emojiButton.innerHTML = "😀";
-buttonContainer3.append(emojiButton);
+const stickerTool1 = new ToolButton(`😀`, EMPTY, true);
+const stickerButton1 = stickerTool1.button;
+buttonContainer3.append(stickerButton1);
 
-const emojiButton2 = document.createElement("button");
-emojiButton2.innerHTML = "😎";
-buttonContainer3.append(emojiButton2);
+const stickerTool2 = new ToolButton(`😎`, EMPTY, true);
+const stickerButton2 = stickerTool2.button;
+buttonContainer3.append(stickerButton2);
 
-const emojiButton3 = document.createElement("button");
-emojiButton3.innerHTML = "😍";
-buttonContainer3.append(emojiButton3);
+const stickerTool3 = new ToolButton(`😍`, EMPTY, true);
+const stickerButton3 = stickerTool3.button;
+buttonContainer3.append(stickerButton3);
+
+thinTool.setting(thickTool, stickerTool1, stickerTool2, stickerTool3);
+thickTool.setting(thinTool, stickerTool1, stickerTool2, stickerTool3);
+stickerTool1.setting(thinTool, thickTool, stickerTool2, stickerTool3);
+stickerTool2.setting(thinTool, thickTool, stickerTool1, stickerTool3);
+stickerTool3.setting(thinTool, thickTool, stickerTool1, stickerTool2);
