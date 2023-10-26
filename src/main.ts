@@ -13,6 +13,7 @@ const HALF = 2;
 const EXPORT_TEXT_SACLE = 4;
 let IS_STICKER = false;
 let STICKER = ``;
+let CURRNET_COLOR = `#000000`;
 const ALL_TOOL_BUTTONS: ToolButton[] = [];
 const DEFAULT_STICKERS: string[] = [`😀`, `😎`, `😍`];
 
@@ -26,6 +27,7 @@ class LineCommand {
   private lineWidth: number;
   private isSticker = false;
   private sticker = ``;
+  private color = `#000000`;
 
   constructor(
     x: number,
@@ -38,6 +40,7 @@ class LineCommand {
     this.lineWidth = lineWidth;
     this.isSticker = isSticker;
     this.sticker = sticker;
+    this.color = CURRNET_COLOR;
   }
 
   public display(ctx: CanvasRenderingContext2D | null): void {
@@ -45,7 +48,7 @@ class LineCommand {
       const { x, y } = this.points[FIRST_INDEX];
       ctx!.fillText(this.sticker, x, y);
     } else if (ctx && this.lineWidth > EMPTY) {
-      ctx.strokeStyle = "black";
+      ctx.strokeStyle = this.color;
       ctx.lineWidth = this.lineWidth;
       ctx.beginPath();
       const { x, y } = this.points[FIRST_INDEX];
@@ -82,7 +85,7 @@ class CursorCommand {
     } else if (ctx) {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.lineWidth / HALF, ORIGIN, Math.PI * HALF);
-      ctx.fillStyle = "black";
+      ctx.fillStyle = CURRNET_COLOR;
       ctx.fill();
     }
   }
@@ -315,4 +318,16 @@ exportButton.addEventListener("click", () => {
   image.download = "exported_image.png";
   image.href = exportCanvas.toDataURL("image/png");
   image.click();
+});
+
+//Ask copilot how to create a color palette
+const colorPicker = document.createElement(`input`);
+colorPicker.type = `color`;
+colorPicker.value = `#000000`;
+colorPicker.id = `colorPicker`;
+
+buttonContainer3.appendChild(colorPicker);
+
+colorPicker.addEventListener(`change`, (event) => {
+  CURRNET_COLOR = (event.target as HTMLInputElement).value;
 });
