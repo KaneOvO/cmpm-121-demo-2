@@ -82,7 +82,7 @@ class CursorCommand {
     } else if (ctx) {
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.lineWidth / HALF, ORIGIN, Math.PI * HALF);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillStyle = "black";
       ctx.fill();
     }
   }
@@ -99,7 +99,6 @@ class ToolButton {
     this.button = document.createElement("button");
     this.button.innerHTML = name;
     this.isClick = false;
-    this.button.style.fontWeight = ``;
     this.isSticker = isSticker;
     this.setting();
   }
